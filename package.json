@@ -41,12 +41,12 @@
     "typescript": "^3.9.6"
   },
   "dependencies": {
-    "debug": "^4.1.1",
+    "debug": "^4.3.6",
     "del": "^5.1.0",
-    "diff": "^5.1.0",
-    "git-clone": "^0.1.0",
-    "node-addon-api": "^5.0.0",
-    "node-gyp": "^9.3.0"
+    "diff": "^5.2.0",
+    "git-clone": "^0.2.0",
+    "node-addon-api": "^8.1.0",
+    "node-gyp": "^10.2.0"
   },
   "bugs": {
     "url": "https://github.com/Eyevinn/node-srt/issues"
