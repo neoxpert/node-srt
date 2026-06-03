@@ -249,13 +249,33 @@ Napi::Value NodeSRT::SetSockOpt(const Napi::CallbackInfo& info) {
   Napi::Number option = info[1].As<Napi::Number>();
   int result = SRT_ERROR;
 
-  if (info[2].IsNumber()) {
+  if (info[2].IsBigInt()) {
+      Napi::BigInt value = info[2].As<Napi::BigInt>();
+      int32_t optName = option;
+
+      bool lossless = true;
+      int64_t optValue = value.Int64Value(&lossless);
+
+      if (!lossless) {
+        Napi::Error::New(env, "BigInt value overflows int64_t").ThrowAsJavaScriptException();
+        return Napi::Number::New(env, SRT_ERROR);
+      }
+
+      result = srt_setsockflag(socketValue, (SRT_SOCKOPT) optName, &optValue, sizeof(int64_t));
+
+      if (result == SRT_ERROR) {
+        Napi::Error::New(env, srt_getlasterror_str()).ThrowAsJavaScriptException();
+        return Napi::Number::New(env, SRT_ERROR);
+      }
+  } else if (info[2].IsNumber()) {
     Napi::Number value = info[2].As<Napi::Number>();
     int32_t optName = option;
     int optValue = value;
     result = srt_setsockflag(socketValue, (SRT_SOCKOPT) optName, &optValue, sizeof(int));
+
     if (result == SRT_ERROR) {
       Napi::Error::New(env, srt_getlasterror_str()).ThrowAsJavaScriptException();
+
       return Napi::Number::New(env, SRT_ERROR);
     }
   } else if (info[2].IsBoolean()) {
@@ -263,8 +283,10 @@ Napi::Value NodeSRT::SetSockOpt(const Napi::CallbackInfo& info) {
     int32_t optName = option;
     bool optValue = value;
     result = srt_setsockflag(socketValue, (SRT_SOCKOPT) optName, &optValue, sizeof(bool));
+
     if (result == SRT_ERROR) {
       Napi::Error::New(env, srt_getlasterror_str()).ThrowAsJavaScriptException();
+
       return Napi::Number::New(env, SRT_ERROR);
     }
   } else if (info[2].IsString()) {
@@ -272,13 +294,16 @@ Napi::Value NodeSRT::SetSockOpt(const Napi::CallbackInfo& info) {
       int32_t optName = option;
       std::string optValue = std::string(value);
       result = srt_setsockflag(socketValue, (SRT_SOCKOPT) optName, optValue.c_str(), optValue.length());
+
       if (result == SRT_ERROR) {
         Napi::Error::New(env, srt_getlasterror_str()).ThrowAsJavaScriptException();
+
         return Napi::Number::New(env, SRT_ERROR);
       }
   } else {
     Napi::Error::New(env, "Unexpected argument type for srt_setsockflag").ThrowAsJavaScriptException();
   }
+
   return Napi::Number::New(env, result);
 }
 
